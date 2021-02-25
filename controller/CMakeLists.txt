@@ -121,9 +121,6 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_executable(joy_node_interpreter src/joy_node_listener.cpp)
-target_link_libraries(joy_node_interpreter ${catkin_LIBRARIES})
-
 add_executable(fpga_stream src/fpga_stream.cpp)
 target_link_libraries(fpga_stream ${catkin_LIBRARIES})
 

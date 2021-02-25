@@ -127,7 +127,7 @@ int main(int argc, char** argv)
   }
   if(argc < 2){
     std::cerr << "Too few arguments!! Please include USB Device path! \n" <<
-    "command should look like: rosrun controller fpga_stream [path of usb device] \n" <<
+    "Command should look like: rosrun controller fpga_stream [path of usb device] \n" <<
     "ex. rosrun controller fpga_stream /dev/ttyUSB1" << std::endl;
     return 1;
   }
