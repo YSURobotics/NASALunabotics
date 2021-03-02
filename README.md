@@ -72,3 +72,9 @@ Step 1) Install ROS
   
     cd ~/catkin_ws/
     catkin_make
+
+ 
+ 
+ To source this library in ROS you have to run 
+    . ~/catkin_ws/devel/setup.bash 
+ in each terminal instance you'd like to use this library
