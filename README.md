@@ -76,5 +76,7 @@ Step 1) Install ROS
  
  
  To source this library in ROS you have to run 
-    . ~/catkin_ws/devel/setup.bash 
+ 
+      . ~/catkin_ws/devel/setup.bash 
+      
  in each terminal instance you'd like to use this library
