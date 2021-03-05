@@ -1,0 +1,43 @@
+8-byte Package
+
+Byte0:
+    Left-Drive Magnitide 
+        0-20 (10 Neutral) (Left Stick U/D)
+
+Byte1:
+    Right-Drive Magnitide 
+        0-20 (10 Neutral) (Right Stick U/D)
+
+Byte2: 
+    Rail System:
+        ****Decide on this****
+
+Byte3:
+    Auger Drive:
+        BIT0: Right drive (RT)
+        BIT1: Right Reverse (RB)
+        BIT2: Left Drive (LT)
+        BIT3: Left Reverse (LB)
+        BIT4: ???
+        BIT5: ???
+        BIT6: ???
+        BIT7: ???
+
+Byte4:
+    Dump System
+        BIT0: Right Drive (DR)
+        BIT1: Left Drive (DL)
+        BIT2: Rotate Up (DU)
+        BIT3: Rotate Down (DD)
+        BIT4: ???
+        BIT5: ???
+        BIT6: ???
+        BIT7: ???
+
+
+Byte5:
+
+Byte6:
+
+Byte7: 
+    Verification

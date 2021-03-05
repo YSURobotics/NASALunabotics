@@ -57,30 +57,65 @@ Serial::Serial(char* path){
 
 void Serial::joystickCallback(const sensor_msgs::Joy::ConstPtr& joy){
 
-  //Place all the controller inputs in the package buffer
-  m_package[LEFT_DRIVE] = (joy->axes[AXIS::LEFT_STick_UD] * 10) + 10;
-  m_package[RIGHT_DRIVE] = (joy->axes[AXIS::RIGHT_STICK_UD] * 10) + 10;
-  m_package[AUGER] = joy->buttons[BUTTONS::A];
-  m_package[DUMP] = joy->buttons[BUTTONS::B];
+    //Place all the controller inputs in the package buffer
+    m_package[LEFT_DRIVE]  = (joy->axes[AXIS::LEFT_STICK_UD] * 10) + 10;
+    m_package[RIGHT_DRIVE] = (joy->axes[AXIS::RIGHT_STICK_UD] * 10) + 10;
+    m_package[AUGER_DRIVE] = 0;
+    m_package[RAIL]        = 0;
+    m_package[DUMP]        = joy->buttons[BUTTONS::B];
 
-  //Send package to FPGA
-  send_package();
+  rail:
+    if(joy->axes[AXIS::D_PAD_UD] == 0 && joy->axes[AXIS::D_PAD_LR] == 0){
+      goto auger_drive;
+    }
+
+    if(joy->axes[AXIS::D_PAD_LR] < 0) // RIGHT
+      m_package[RAIL] |= BIT0;
+    if(joy->axes[AXIS::D_PAD_LR] > 0) // LEFT
+      m_package[RAIL] |= BIT1;
+    
+    if(joy->axes[AXIS::D_PAD_UD] > 0) // UP
+      m_package[RAIL] |= BIT2;
+    if(joy->axes[AXIS::D_PAD_UD] < 0) // DOWN
+      m_package[RAIL] |= BIT3;
+
+
+  auger_drive:
+    if(      joy->axes[AXIS::LT] == 0 && joy->axes[AXIS::RT] == 0  &&
+       joy->buttons[BUTTONS::LB] == 0 && joy->buttons[BUTTONS::RB] == 0)
+      {
+        goto send_package;
+      }
+
+    if(joy->axes[AXIS::RT])           // RIGHT DRIVE
+      m_package[AUGER_DRIVE] |= BIT0;
+    else if(joy->buttons[BUTTONS::RB])// RIGHT BACK
+      m_package[AUGER_DRIVE] |= BIT1;
+
+    if(joy->axes[AXIS::LT])           // LEFT DRIVE
+      m_package[AUGER_DRIVE] |= BIT2;
+    else if(joy->buttons[BUTTONS::LB])// LEFT BACK
+      m_package[AUGER_DRIVE] |= BIT3;
+
+  send_package:
+    //Send package to FPGA
+    send_package(0);
 }
 
-void Serial::send_package() {
+void Serial::send_package(int count) {
 
   //Get a random verification byte
-  m_package[VERIFICATION] = random();
+  m_package[VERIFICATION] = random() % 255; // Using mod here so we dont need to deal with overflow when adding one
 
   //Actually write buffer to USB
   write(m_serial_port, &m_package, sizeof(m_package));
 
   //Make sure package is received and interpreted correctly
-  if(wait_for_reply())
-    send_package();
+  if(wait_for_reply(count))
+    send_package(count);
 }
 
-int Serial::wait_for_reply(){
+int Serial::wait_for_reply(int& sent){
   //temp buf
   uint8_t recv[8];
 
@@ -91,7 +126,14 @@ int Serial::wait_for_reply(){
   }
 
   //Make sure the message was verified, if not, resend the same package
-  if(recv[VERIFICATION] != m_package[VERIFICATION] + 1){
+  if(recv[VERIFICATION] != m_package[VERIFICATION]){
+    if(sent < 2){
+      printf("\x1B[33mSlow Down! Could not verify packet! Resent %d times\033[0m\n", sent);
+    }
+    else {
+      printf("\x1B[31mSlow Down! Could not verify packet! Resent %d times\033[0m\n", sent);
+    }
+    sent++;
     return 1;
   }
 
@@ -106,9 +148,9 @@ void Serial::publish_rover_package(uint8_t (&buf)[8]){
   //Place values in msg
   msg.left_vel = buf[LEFT_DRIVE];
   msg.right_vel = buf[RIGHT_DRIVE];
-  msg.auger = buf[AUGER];
+  msg.rail = buf[RAIL];
+  msg.auger = buf[AUGER_DRIVE];
   msg.dump = buf[DUMP];
-  msg.reserved = buf[4];
   msg.reserved1 = buf[5];
   msg.reserved8 = buf[6];
   msg.verification = buf[VERIFICATION];
