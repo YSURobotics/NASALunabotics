@@ -10,21 +10,6 @@ Byte1:
 
 Byte2: 
     Rail System:
-        ****Decide on this****
-
-Byte3:
-    Auger Drive:
-        BIT0: Right drive (RT)
-        BIT1: Right Reverse (RB)
-        BIT2: Left Drive (LT)
-        BIT3: Left Reverse (LB)
-        BIT4: ???
-        BIT5: ???
-        BIT6: ???
-        BIT7: ???
-
-Byte4:
-    Dump System
         BIT0: Right Drive (DR)
         BIT1: Left Drive (DL)
         BIT2: Rotate Up (DU)
@@ -34,6 +19,27 @@ Byte4:
         BIT6: ???
         BIT7: ???
 
+Byte3:
+    Auger Drive:
+        BIT0: Right drive (RT)
+        BIT1: Right Reverse (RB)
+        BIT2: Left Drive (LT)
+        BIT3: Left Reverse (LB)
+        BIT4: Speed (Y)
+        BIT5: ???
+        BIT6: ???
+        BIT7: ???
+
+Byte4:
+    Dump System
+        BIT0: Lower (X)
+        BIT1: Dump (B)
+        BIT2: ???
+        BIT3: ???
+        BIT4: ???
+        BIT5: ???
+        BIT6: ???
+        BIT7: ???
 
 Byte5:
 

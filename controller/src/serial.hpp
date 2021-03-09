@@ -9,6 +9,7 @@
 
 #include <iostream>
 #include <bitset>
+#include <chrono>
 
 // Linux headers
 #include <fcntl.h> // Contains file controls like O_RDWR
@@ -77,4 +78,23 @@ class Serial{
 
     int m_serial_port;
     struct termios m_tty;
+
+    uint8_t m_auger_speed;
 };
+
+
+class Rover{
+
+public:
+    Rover();
+    
+private:
+
+    void messageCallback(const controller::Rover::ConstPtr& msg);
+
+    ros::NodeHandle nh_;
+    ros::Subscriber m_rover_sub_;
+
+    uint8_t m_package[8] = {0,0,0,0,0,0,0,0};
+};
+
