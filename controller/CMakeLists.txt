@@ -52,6 +52,7 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(DIRECTORY msg
    FILES
    Rover.msg
+   IR_Data.msg
  )
 
 ## Generate services in the 'srv' folder
@@ -106,7 +107,7 @@ add_message_files(DIRECTORY msg
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES controller
-   CATKIN_DEPENDS joy roscpp message_runtime
+   CATKIN_DEPENDS joy roscpp rospy message_runtime
 #  DEPENDS system_lib
 )
 
