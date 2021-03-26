@@ -64,7 +64,7 @@ Step 1) Install ROS
   Clone this repo into catkin_ws/src
   
     cd ~/catkin_ws/src/
-    git clone https://github.com/rjyarwood/Lunabotics.git
+    git clone https://github.com/YSURobotics/NASALunabotics.git
   
   Step 5)
   
