@@ -65,8 +65,8 @@ void Serial::irCallback(const controller::IR_Data::ConstPtr& msg){
   if(!using_ir_sensors){
     return;
   }
-  m_package[LEFT_DRIVE]  = 10;
-  m_package[RIGHT_DRIVE] = 10;
+  m_package[LEFT_DRIVE]  = 11;
+  m_package[RIGHT_DRIVE] = 11;
   m_package[AUGER_DRIVE] = 0;
   m_package[RAIL]        = 0;
   m_package[DUMP]        = 0;
@@ -74,29 +74,29 @@ void Serial::irCallback(const controller::IR_Data::ConstPtr& msg){
   double angle = msg->direction;
 
   if(angle == 0){
-    m_package[RIGHT_DRIVE] = 20; 
-    m_package[LEFT_DRIVE] = 20;
+    m_package[RIGHT_DRIVE] = 21; 
+    m_package[LEFT_DRIVE] = 21;
   } else if(angle == 90){
-    m_package[RIGHT_DRIVE] = 0; 
-    m_package[LEFT_DRIVE] = 20;
+    m_package[RIGHT_DRIVE] = 1; 
+    m_package[LEFT_DRIVE] = 21;
   } else if(angle == 180){
-    m_package[RIGHT_DRIVE] = 0; 
-    m_package[LEFT_DRIVE] = 0;
+    m_package[RIGHT_DRIVE] = 1; 
+    m_package[LEFT_DRIVE] = 1;
   } else if(angle == 270) {
-    m_package[RIGHT_DRIVE] = 20; 
-    m_package[LEFT_DRIVE] = 0;
+    m_package[RIGHT_DRIVE] = 21; 
+    m_package[LEFT_DRIVE] = 1;
   } else if(angle > 0 && angle < 90){
-    m_package[RIGHT_DRIVE] = 20 - (20 *  (angle / 90)); 
-    m_package[LEFT_DRIVE] = 20;
+    m_package[RIGHT_DRIVE] = 21 - (21 *  (angle / 90)); 
+    m_package[LEFT_DRIVE] = 21;
   } else if ( angle > 90 && angle < 180){
-    m_package[RIGHT_DRIVE] = 0; 
-    m_package[LEFT_DRIVE] = 20;
+    m_package[RIGHT_DRIVE] = 1; 
+    m_package[LEFT_DRIVE] = 21;
   } else if ( angle > 180 && angle < 270){
-    m_package[RIGHT_DRIVE] = 20;
-    m_package[LEFT_DRIVE] = 0;
+    m_package[RIGHT_DRIVE] = 21;
+    m_package[LEFT_DRIVE] = 1;
   } else if ( angle > 270 && angle < 360){
-    m_package[RIGHT_DRIVE] = 20;
-    m_package[LEFT_DRIVE] = 20 - (20 *  ((angle - 270) / 90));
+    m_package[RIGHT_DRIVE] = 21;
+    m_package[LEFT_DRIVE] = 21 - (21 *  ((angle - 270) / 90));
   }
 
   send_package: 
@@ -107,8 +107,8 @@ void Serial::joystickCallback(const sensor_msgs::Joy::ConstPtr& joy){
 
     //Place all the controller inputs in the package buffer
     if(!using_ir_sensors){
-      m_package[LEFT_DRIVE]  = (joy->axes[AXIS::LEFT_STICK_UD] * 10) + 10;
-      m_package[RIGHT_DRIVE] = (joy->axes[AXIS::RIGHT_STICK_UD] * 10) + 10;
+      m_package[LEFT_DRIVE]  = (joy->axes[AXIS::LEFT_STICK_UD] * 10) + 11;
+      m_package[RIGHT_DRIVE] = (joy->axes[AXIS::RIGHT_STICK_UD] * 10) + 11;
     } else {
        m_package[LEFT_DRIVE] =  m_package[LEFT_DRIVE];
        m_package[RIGHT_DRIVE] = m_package[RIGHT_DRIVE];
