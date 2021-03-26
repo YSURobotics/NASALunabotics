@@ -9,13 +9,19 @@ from controller.msg import IR_Data
 class ROVER_IR_ARRAY:
 
     def __init__(self, pins):
-        self.queue = Circular_Queue(50)
+        self.queue = Circular_Queue(20)
+        self.last_dir = -1
         for pin in pins:
             GPIO.setup(pin, GPIO.IN)
-            GPIO.add_event_detect(pin, GPIO.RISING, callback=self.callback)
+            GPIO.add_event_detect(pin, GPIO.FALLING, callback=self.callback)
 
     def callback(self, channel):
-        self.queue.enqueue(channel%4)
+        self.last_dir = channel % 4
+        if(GPIO.input(channel) == GPIO.LOW):
+            self.queue.enqueue(channel%4)
+
+    def rosUpdate(self):
+        self.queue.enqueue(self.last_dir)
 
     def getDirection(self):
         return 90 * self.queue.average()
@@ -33,8 +39,9 @@ def main():
     msg = IR_Data()
 
     while not rospy.is_shutdown():
+        rover_array.rosUpdate()
         msg.direction = rover_array.getDirection()
-        print(rover_array.getDirection())
+        print("direction: " + str(rover_array.getDirection()))
         pub.publish(msg)
         r.sleep()
 

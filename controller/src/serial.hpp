@@ -2,6 +2,7 @@
 #include <ros/ros.h>
 #include <sensor_msgs/Joy.h>
 #include <controller/Rover.h>
+#include <controller/IR_Data.h>
 
 // C library headers
 #include <stdio.h>
@@ -64,6 +65,7 @@ class Serial{
 
   private:
     void joystickCallback(const sensor_msgs::Joy::ConstPtr& joy);
+    void irCallback(const controller::IR_Data::ConstPtr& msg);
     int initTTY();
     void send_package(int count);
     int wait_for_reply(int& count);
@@ -73,6 +75,7 @@ class Serial{
 
     ros::Publisher m_rov_pub_;
     ros::Subscriber m_joy_sub_;
+    ros::Subscriber m_ir_sub_;
 
     uint8_t m_package[8] = {0,0,0,0,0,0,0,0};
 
@@ -80,6 +83,7 @@ class Serial{
     struct termios m_tty;
 
     uint8_t m_auger_speed;
+    bool using_ir_sensors = false;
 };
 
 

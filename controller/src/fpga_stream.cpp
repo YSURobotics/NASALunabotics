@@ -34,6 +34,7 @@ int Serial::initTTY(){
 
 Serial::Serial(char* path){
 
+  std::cout << path << std::endl;
   m_serial_port = open(path, O_RDWR);
 
   initTTY();
@@ -53,15 +54,65 @@ Serial::Serial(char* path){
   //Setting up to listen to the controller node
   m_joy_sub_ = nh_.subscribe<sensor_msgs::Joy>("joy", 1, &Serial::joystickCallback, this);
 
+  //Setting up to listen to ir data
+  m_ir_sub_ = nh_.subscribe<controller::IR_Data>("ir_array", 1, &Serial::irCallback, this);
+
+
   m_auger_speed = 0;
 }
 
+void Serial::irCallback(const controller::IR_Data::ConstPtr& msg){
+  if(!using_ir_sensors){
+    return;
+  }
+  m_package[LEFT_DRIVE]  = 10;
+  m_package[RIGHT_DRIVE] = 10;
+  m_package[AUGER_DRIVE] = 0;
+  m_package[RAIL]        = 0;
+  m_package[DUMP]        = 0;
+
+  double angle = msg->direction;
+
+  if(angle == 0){
+    m_package[RIGHT_DRIVE] = 20; 
+    m_package[LEFT_DRIVE] = 20;
+  } else if(angle == 90){
+    m_package[RIGHT_DRIVE] = 0; 
+    m_package[LEFT_DRIVE] = 20;
+  } else if(angle == 180){
+    m_package[RIGHT_DRIVE] = 0; 
+    m_package[LEFT_DRIVE] = 0;
+  } else if(angle == 270) {
+    m_package[RIGHT_DRIVE] = 20; 
+    m_package[LEFT_DRIVE] = 0;
+  } else if(angle > 0 && angle < 90){
+    m_package[RIGHT_DRIVE] = 20 - (20 *  (angle / 90)); 
+    m_package[LEFT_DRIVE] = 20;
+  } else if ( angle > 90 && angle < 180){
+    m_package[RIGHT_DRIVE] = 0; 
+    m_package[LEFT_DRIVE] = 20;
+  } else if ( angle > 180 && angle < 270){
+    m_package[RIGHT_DRIVE] = 20;
+    m_package[LEFT_DRIVE] = 0;
+  } else if ( angle > 270 && angle < 360){
+    m_package[RIGHT_DRIVE] = 20;
+    m_package[LEFT_DRIVE] = 20 - (20 *  ((angle - 270) / 90));
+  }
+
+  send_package: 
+    send_package(0);
+}
 
 void Serial::joystickCallback(const sensor_msgs::Joy::ConstPtr& joy){
 
     //Place all the controller inputs in the package buffer
-    m_package[LEFT_DRIVE]  = (joy->axes[AXIS::LEFT_STICK_UD] * 10) + 10;
-    m_package[RIGHT_DRIVE] = (joy->axes[AXIS::RIGHT_STICK_UD] * 10) + 10;
+    if(!using_ir_sensors){
+      m_package[LEFT_DRIVE]  = (joy->axes[AXIS::LEFT_STICK_UD] * 10) + 10;
+      m_package[RIGHT_DRIVE] = (joy->axes[AXIS::RIGHT_STICK_UD] * 10) + 10;
+    } else {
+       m_package[LEFT_DRIVE] =  m_package[LEFT_DRIVE];
+       m_package[RIGHT_DRIVE] = m_package[RIGHT_DRIVE];
+    }
     m_package[AUGER_DRIVE] = 0;
     m_package[RAIL]        = 0;
     m_package[DUMP]        = 0;
@@ -69,6 +120,9 @@ void Serial::joystickCallback(const sensor_msgs::Joy::ConstPtr& joy){
 
     if(joy->buttons[BUTTONS::Y])
       m_auger_speed ^= BIT4;    // Toggle speed
+
+    if(joy->buttons[BUTTONS::SELECT])
+      using_ir_sensors = !using_ir_sensors; // Toggle IR Sensors usage
 
 
   dump: 
@@ -122,6 +176,7 @@ void Serial::joystickCallback(const sensor_msgs::Joy::ConstPtr& joy){
       m_package[AUGER_DRIVE] |= BIT2;
     else if(joy->buttons[BUTTONS::LB])     // LEFT BACK
       m_package[AUGER_DRIVE] |= BIT3;
+
 
   send_package:
     //Send package to FPGA
