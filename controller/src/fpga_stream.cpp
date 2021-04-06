@@ -52,7 +52,7 @@ Serial::Serial(char* path){
   m_rov_pub_ = nh_.advertise<controller::Rover>("rover", 1);
 
   //Setting up to listen to the controller node
-  m_joy_sub_ = nh_.subscribe<sensor_msgs::Joy>("joy", 1, &Serial::joystickCallback, this);
+  m_joy_sub_ = nh_.subscribe<controller::JoyCon>("joycon", 1, &Serial::joystickCallback, this);
 
   //Setting up to listen to ir data
   m_ir_sub_ = nh_.subscribe<controller::IR_Data>("ir_array", 1, &Serial::irCallback, this);
@@ -103,12 +103,13 @@ void Serial::irCallback(const controller::IR_Data::ConstPtr& msg){
     send_package(0);
 }
 
-void Serial::joystickCallback(const sensor_msgs::Joy::ConstPtr& joy){
+void Serial::joystickCallback(const controller::JoyCon::ConstPtr& joy){
 
     //Place all the controller inputs in the package buffer
     if(!using_ir_sensors){
-      m_package[LEFT_DRIVE]  = (joy->axes[AXIS::LEFT_STICK_UD] * 10) + 11;
-      m_package[RIGHT_DRIVE] = (joy->axes[AXIS::RIGHT_STICK_UD] * 10) + 11;
+      m_package[LEFT_DRIVE]  = (joy->LS_UD / (joycon::AXIS_RANGE / 10)) + 11;
+      //(m_axes[LS_UD] / (AXIS_RANGE / 11) + 11
+      m_package[RIGHT_DRIVE] = (joy->RS_UD / (joycon::AXIS_RANGE / 10)) + 11;
     } else {
        m_package[LEFT_DRIVE] =  m_package[LEFT_DRIVE];
        m_package[RIGHT_DRIVE] = m_package[RIGHT_DRIVE];
@@ -118,63 +119,63 @@ void Serial::joystickCallback(const sensor_msgs::Joy::ConstPtr& joy){
     m_package[DUMP]        = 0;
 
 
-    if(joy->buttons[BUTTONS::Y])
+    if(joy->Y)
       m_auger_speed ^= BIT4;    // Toggle speed
 
-    if(joy->buttons[BUTTONS::SELECT])
+    if(joy->SELECT)
       using_ir_sensors = !using_ir_sensors; // Toggle IR Sensors usage
 
 
   dump: 
-    if((joy->buttons[BUTTONS::X] == 0 && joy->buttons[BUTTONS::B] == 0) ||
-       (joy->buttons[BUTTONS::X] != 0 && joy->buttons[BUTTONS::B] != 0)) {
+    if((joy->X == 0 && joy->B == 0) ||
+       (joy->X != 0 && joy->B != 0)) {
       goto rail;
     }
 
-    if(joy->buttons[BUTTONS::X]){      // Lower Dump
+    if(joy->X){      // Lower Dump
       m_package[RAIL] |= BIT0;
     }
-    else if(joy->buttons[BUTTONS::B]){ // Tilt dump
+    else if(joy->B){ // Tilt dump
       m_package[RAIL] |= BIT1;
     }
     
 
   rail:
-    if((joy->axes[AXIS::D_PAD_UD] == 0 && joy->axes[AXIS::D_PAD_LR] == 0) ||
-       (joy->axes[AXIS::D_PAD_UD] != 0 && joy->axes[AXIS::D_PAD_LR] != 0)){
+    if((joy->DPAD_UD == 0 && joy->DPAD_LR == 0) ||
+       (joy->DPAD_UD != 0 && joy->DPAD_LR != 0)){
       goto auger_drive;
     }
 
-    if(joy->axes[AXIS::D_PAD_LR] < 0) // RIGHT
+    if(joy->DPAD_LR < 0) // RIGHT
       m_package[RAIL] |= BIT0;
-    else if(joy->axes[AXIS::D_PAD_LR] > 0) // LEFT
+    else if(joy->DPAD_LR > 0) // LEFT
       m_package[RAIL] |= BIT1;
     
-    if(joy->axes[AXIS::D_PAD_UD] > 0) // UP
+    if(joy->DPAD_UD > 0) // UP
       m_package[RAIL] |= BIT2;
-    else if(joy->axes[AXIS::D_PAD_UD] < 0) // DOWN
+    else if(joy->DPAD_UD < 0) // DOWN
       m_package[RAIL] |= BIT3;      
 
 
     m_package[RAIL] |= m_auger_speed;
 
   auger_drive:
-    if(      joy->axes[AXIS::LT] == 0 && joy->axes[AXIS::RT] == 0  &&
-       joy->buttons[BUTTONS::LB] == 0 && joy->buttons[BUTTONS::RB] == 0)
+    if(      joy->LT == 0 && joy->RT == 0  &&
+       joy->LB == 0 && joy->RB == 0)
       {
         goto send_package;
       }
 
-    if(joy->axes[AXIS::RT] && joy->buttons[BUTTONS::RB]) {} // If both on, do nothing
-    else if(joy->axes[AXIS::RT])          // RIGHT DRIVE
+    if(joy->RT && joy->RB) {} // If both on, do nothing
+    else if(joy->RT)          // RIGHT DRIVE
       m_package[AUGER_DRIVE] |= BIT0;
-    else if(joy->buttons[BUTTONS::RB])    // RIGHT BACK
+    else if(joy->RB)    // RIGHT BACK
       m_package[AUGER_DRIVE] |= BIT1;
 
-    if(joy->axes[AXIS::LT] && joy->buttons[BUTTONS::LB]) {} // If both on, do nothing
-    else if(joy->axes[AXIS::LT])           // LEFT DRIVE
+    if(joy->LT && joy->LB) {} // If both on, do nothing
+    else if(joy->LT)           // LEFT DRIVE
       m_package[AUGER_DRIVE] |= BIT2;
-    else if(joy->buttons[BUTTONS::LB])     // LEFT BACK
+    else if(joy->LB)     // LEFT BACK
       m_package[AUGER_DRIVE] |= BIT3;
 
 

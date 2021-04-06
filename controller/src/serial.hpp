@@ -1,7 +1,7 @@
 // ROS Includes
 #include <ros/ros.h>
-#include <sensor_msgs/Joy.h>
 #include <controller/Rover.h>
+#include "joystick.hpp"
 #include <controller/IR_Data.h>
 
 // C library headers
@@ -64,7 +64,7 @@ class Serial{
     Serial(char* path);
 
   private:
-    void joystickCallback(const sensor_msgs::Joy::ConstPtr& joy);
+    void joystickCallback(const controller::JoyCon::ConstPtr& joy);
     void irCallback(const controller::IR_Data::ConstPtr& msg);
     int initTTY();
     void send_package(int count);

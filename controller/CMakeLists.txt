@@ -8,7 +8,6 @@ project(controller)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  joy
   message_generation
   genmsg
   roscpp
@@ -51,6 +50,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate messages in the 'msg' folder
 add_message_files(DIRECTORY msg
    FILES
+   JoyCon.msg
    Rover.msg
    IR_Data.msg
  )
@@ -107,7 +107,7 @@ add_message_files(DIRECTORY msg
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES controller
-   CATKIN_DEPENDS joy roscpp rospy message_runtime
+   CATKIN_DEPENDS roscpp rospy message_runtime
 #  DEPENDS system_lib
 )
 
@@ -124,6 +124,8 @@ include_directories(
 
 add_executable(fpga_stream src/fpga_stream.cpp)
 target_link_libraries(fpga_stream ${catkin_LIBRARIES})
+add_executable(joystick src/joystick.cpp)
+target_link_libraries(joystick ${catkin_LIBRARIES})
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
