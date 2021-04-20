@@ -133,10 +133,10 @@ void Serial::joystickCallback(const controller::JoyCon::ConstPtr& joy){
     }
 
     if(joy->X){      // Lower Dump
-      m_package[RAIL] |= BIT0;
+      m_package[DUMP] |= BIT0;
     }
     else if(joy->B){ // Tilt dump
-      m_package[RAIL] |= BIT1;
+      m_package[DUMP] |= BIT1;
     }
     
 
@@ -152,9 +152,9 @@ void Serial::joystickCallback(const controller::JoyCon::ConstPtr& joy){
       m_package[RAIL] |= BIT1;
     
     if(joy->DPAD_UD > 0) // UP
-      m_package[RAIL] |= BIT2;
+      m_package[RAIL] |= BIT3;
     else if(joy->DPAD_UD < 0) // DOWN
-      m_package[RAIL] |= BIT3;      
+      m_package[RAIL] |= BIT2;      
 
 
     m_package[RAIL] |= m_auger_speed;
