@@ -160,20 +160,20 @@ void Serial::joystickCallback(const controller::JoyCon::ConstPtr& joy){
     m_package[RAIL] |= m_auger_speed;
 
   auger_drive:
-    if(      joy->LT == -joycon::AXIS_RANGE && joy->RT == joycon::AXIS_RANGE  &&
+    if(joy->LT < 0 && joy->RT < 0  &&
        joy->LB == 0 && joy->RB == 0)
       {
         goto send_package;
       }
 
-    if(!joy->RT == -joycon::AXIS_RANGE && joy->RB) {} // If both on, do nothing
-    else if(joy->RT)          // RIGHT DRIVE
+    if(joy->RT > 0 && joy->RB) {} // If both on, do nothing
+    else if(joy->RT > 0)          // RIGHT DRIVE
       m_package[AUGER_DRIVE] |= BIT0;
     else if(joy->RB)    // RIGHT BACK
       m_package[AUGER_DRIVE] |= BIT1;
 
-    if(!joy->LT == -joycon::AXIS_RANGE && joy->LB) {} // If both on, do nothing
-    else if(joy->LT)           // LEFT DRIVE
+    if(joy->LT > 0 && joy->LB) {} // If both on, do nothing
+    else if(joy->LT > 0)           // LEFT DRIVE
       m_package[AUGER_DRIVE] |= BIT2;
     else if(joy->LB)     // LEFT BACK
       m_package[AUGER_DRIVE] |= BIT3;
