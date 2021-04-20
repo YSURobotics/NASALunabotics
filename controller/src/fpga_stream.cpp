@@ -114,13 +114,13 @@ void Serial::joystickCallback(const controller::JoyCon::ConstPtr& joy){
        m_package[LEFT_DRIVE] =  m_package[LEFT_DRIVE];
        m_package[RIGHT_DRIVE] = m_package[RIGHT_DRIVE];
     }
-    m_package[AUGER_DRIVE] = 0;
+
     m_package[RAIL]        = 0;
     m_package[DUMP]        = 0;
 
 
     if(joy->Y)
-      m_auger_speed ^= BIT4;    // Toggle speed
+      m_package[AUGER_DRIVE] ^= BIT4;    // Toggle speed
 
     if(joy->SELECT)
       using_ir_sensors = !using_ir_sensors; // Toggle IR Sensors usage
