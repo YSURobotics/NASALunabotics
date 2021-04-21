@@ -4,6 +4,9 @@
 
 Rover::Rover() {
     m_rover_sub_ = nh_.subscribe<controller::Rover>("rover", 1, &Rover::messageCallback, this);
+    std::string timestamp = " ";
+    std::string boost_msg = " ";
+    std::string drivetrain_string = " "; 
 }
 
 
@@ -16,7 +19,7 @@ void Rover::messageCallback(const controller::Rover::ConstPtr& msg) {
 
     std::cout << timestamp << " Rover Status: \n";
 
-        std::cout << "\tBoost: " << ((msg->auger & BIT4) ? (BOLD(UNDL(FGRN("High"))) << FGRY("Low\n"): (FGRY("High") << BOLD(UNDL(FYEL("Low\n"))))));
+        std::cout << "\tBoost: " << ((msg->auger & BIT4) ? (BOLD(UNDL(FGRN("High"))) + " " + FGRY("Low\n"): (FGRY("High") + " " + BOLD(UNDL(FYEL("Low\n"))))));
 
         std::cout << "\tDrivetrain Status: \n";
             std::cout << "\t\tLeft Velocity: " << msg->left_vel << "\n" << 
