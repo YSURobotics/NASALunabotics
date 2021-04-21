@@ -126,6 +126,8 @@ add_executable(fpga_stream src/fpga_stream.cpp)
 target_link_libraries(fpga_stream ${catkin_LIBRARIES})
 add_executable(joystick src/joystick.cpp)
 target_link_libraries(joystick ${catkin_LIBRARIES})
+add_executable(over_stream src/view_rover_stream.cpp)
+target_link_libraries(rover_stream ${catkin_LIBRARIES})
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
