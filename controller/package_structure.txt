@@ -14,7 +14,7 @@ Byte2:
         BIT1: Left Drive (DL)
         BIT2: Rotate Up (DU)
         BIT3: Rotate Down (DD)
-        BIT4: ???
+        BIT4: Servo Lock & Unlock (RS/LS)
         BIT5: ???
         BIT6: ???
         BIT7: ???

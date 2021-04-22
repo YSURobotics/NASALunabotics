@@ -76,9 +76,6 @@ Serial::Serial(char* path){
    */
   m_joy_sub_ = nh_.subscribe<controller::JoyCon>("joycon", 1, &Serial::joystickCallback, this);
   m_ir_sub_ = nh_.subscribe<controller::IR_Data>("ir_array", 1, &Serial::irCallback, this);
-
-  //This is the auger part of the packet, you will see why it is special below
-  m_auger_speed = 0;
 }
 
 /*
@@ -183,6 +180,17 @@ void Serial::joystickCallback(const controller::JoyCon::ConstPtr& joy){
     
 
   rail:
+    if(joy->RS){
+      servo_locked = true; 
+    }
+    else if(joy->LS){
+      servo_locked = false;
+    }
+
+    if(servo_locked){
+      m_package[RAIL] |= BIT4;
+    }
+
     if((joy->DPAD_UD == 0 && joy->DPAD_LR == 0) ||
        (joy->DPAD_UD != 0 && joy->DPAD_LR != 0)){
       goto auger_drive;
@@ -198,8 +206,6 @@ void Serial::joystickCallback(const controller::JoyCon::ConstPtr& joy){
     else if(joy->DPAD_UD < 0) // DOWN
       m_package[RAIL] |= BIT2;      
 
-
-    m_package[RAIL] |= m_auger_speed;
 
   auger_drive:
     if(joy->LT < 0 && joy->RT < 0  &&
