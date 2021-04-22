@@ -12,6 +12,7 @@
 #define KWHT  "\x1B[37m"
 #define KGRY  "\x1B[90m"
 
+/* Sets the foreground then resets */
 #define FRED(x) KRED x RST
 #define FGRN(x) KGRN x RST
 #define FYEL(x) KYEL x RST

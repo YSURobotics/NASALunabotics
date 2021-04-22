@@ -1,7 +1,15 @@
 #include "serial.hpp"
 
+/*
+ * To use this you call rosrun controller fpga_stream <path to FPGA>
+ *
+ * To check the path of the FPGA run 'ls /dev' in a terminal and look for 'ttyUSBX'
+ * change 'X' appropriately
+ */
+
 //Initialize the serial port
 int Serial::initTTY(){
+
   if(tcgetattr(m_serial_port, &m_tty) != 0) {
       printf("Error %i from tcgetattr: %s\n", errno, strerror(errno));
       return 1;
@@ -34,12 +42,17 @@ int Serial::initTTY(){
 
 Serial::Serial(char* path){
 
-  std::cout << path << std::endl;
+  /*
+   * This is your pointer to that '/dev/ttyUSB' path. Linux treats these devices like files
+   *
+   * Think of this as a file that you will write to and read to like any other file and the attached device will do the same
+   */
   m_serial_port = open(path, O_RDWR);
 
+  // This calls that mangled mess above. No, you do not need to know all of those flags
   initTTY();
 
-  //FPGA uses 19200
+  //FPGA uses 19200 baud rate
   cfsetispeed(&m_tty, B19200);
   cfsetospeed(&m_tty, B19200);
 
@@ -48,79 +61,108 @@ Serial::Serial(char* path){
     printf("Error %i from tcsetattr: %s\n", errno, strerror(errno));
   }
 
-  //Init 'rover' topic to be published
+  /*
+   * Init rover packet publisher
+   * @1st param: tells what the topic name should be used for ehat we are publishing
+   * @2nd param: sets the queue size that will be held for this topic, we are using 1 to ensure we always get the newest packet
+   */
   m_rov_pub_ = nh_.advertise<controller::Rover>("rover", 1);
 
-  //Setting up to listen to the controller node
+  /*Setting up to listen to the controller and IR nodes respectively
+   * @1st param: name of the topic we want to listen to updates on
+   * @2nd param: sets the queue size that we want to maintain here, using 1 for newest packet
+   * @3rd param: location of the callback function that will be called when there is an update
+   * @4th param: what we want to pass as context or parameters to the callback function this will pass the object we are in right now
+   */
   m_joy_sub_ = nh_.subscribe<controller::JoyCon>("joycon", 1, &Serial::joystickCallback, this);
-
-  //Setting up to listen to ir data
   m_ir_sub_ = nh_.subscribe<controller::IR_Data>("ir_array", 1, &Serial::irCallback, this);
 
-
+  //This is the auger part of the packet, you will see why it is special below
   m_auger_speed = 0;
 }
 
+/*
+ * A function to handle the data from the IR sensors
+ */
 void Serial::irCallback(const controller::IR_Data::ConstPtr& msg){
+  //If the flag to use the sensors is not set, skip this
   if(!using_ir_sensors){
     return;
   }
-  m_package[LEFT_DRIVE]  = 11;
-  m_package[RIGHT_DRIVE] = 11;
+
+  //Set everything to neutral values
+  m_package[LEFT_DRIVE]  = 0;
+  m_package[RIGHT_DRIVE] = 0;
   m_package[AUGER_DRIVE] = 0;
   m_package[RAIL]        = 0;
   m_package[DUMP]        = 0;
 
+  //Get the angle from the IR msg. THIS IS IN DEGREES
   double angle = msg->direction;
 
-  if(angle == 0){
+
+  if(angle == 0){   // If the sensor is straight ahead we set to full throttle ahead
     m_package[RIGHT_DRIVE] = 21; 
     m_package[LEFT_DRIVE] = 21;
-  } else if(angle == 90){
+  } else if(angle == 90){ // If the sensor is directly to the right we should go full forward on left, full reverse on right
     m_package[RIGHT_DRIVE] = 1; 
     m_package[LEFT_DRIVE] = 21;
-  } else if(angle == 180){
+  } else if(angle == 180){ // If it is perfectly behind us reverse
     m_package[RIGHT_DRIVE] = 1; 
     m_package[LEFT_DRIVE] = 1;
-  } else if(angle == 270) {
+  } else if(angle == 270) { // If the sensor is directly to the left we should go full forward on right, full reverse on left
     m_package[RIGHT_DRIVE] = 21; 
     m_package[LEFT_DRIVE] = 1;
-  } else if(angle > 0 && angle < 90){
+  } else if(angle > 0 && angle < 90){ //Scale the turn if it is in the first quadrant
     m_package[RIGHT_DRIVE] = 21 - (21 *  (angle / 90)); 
     m_package[LEFT_DRIVE] = 21;
+  } else if ( angle > 270 && angle < 360){ // Scale turn if it is in the fourth quadrant
+      m_package[RIGHT_DRIVE] = 21;
+      m_package[LEFT_DRIVE] = 21 - (21 *  ((angle - 270) / 90));
+
+
+      /* if it is slightly behind us, do a donut until its not, avoid reverse for stress on gearbox */
   } else if ( angle > 90 && angle < 180){
     m_package[RIGHT_DRIVE] = 1; 
     m_package[LEFT_DRIVE] = 21;
-  } else if ( angle > 180 && angle < 270){
-    m_package[RIGHT_DRIVE] = 21;
-    m_package[LEFT_DRIVE] = 1;
-  } else if ( angle > 270 && angle < 360){
-    m_package[RIGHT_DRIVE] = 21;
-    m_package[LEFT_DRIVE] = 21 - (21 *  ((angle - 270) / 90));
+  } else if ( angle > 180 && angle < 270) {
+      m_package[RIGHT_DRIVE] = 21;
+      m_package[LEFT_DRIVE] = 1;
   }
 
-  send_package: 
-    send_package(0);
+  // Call the function to send a packet and let it know it is the first try with this packet
+  send_package(0);
 }
 
+
+/*
+ * This is a callback function that is called when the "joycon" topic is updated
+ *
+ *  @param: address to the joycon msg
+ *
+ * This function is heavy with goto statements, very simple but rarely used in a high level language, you will need to
+ * understand these
+ */
 void Serial::joystickCallback(const controller::JoyCon::ConstPtr& joy){
 
-    //Place all the controller inputs in the package buffer
+    // If we are not using the IR sensors get the joystick data for throttle
     if(!using_ir_sensors){
       m_package[LEFT_DRIVE]  = (joy->LS_UD / (joycon::AXIS_RANGE / 10)) + 11;
-      //(m_axes[LS_UD] / (AXIS_RANGE / 11) + 11
       m_package[RIGHT_DRIVE] = (joy->RS_UD / (joycon::AXIS_RANGE / 10)) + 11;
     } else {
+       // Leave the packet unchanged
        m_package[LEFT_DRIVE] =  m_package[LEFT_DRIVE];
        m_package[RIGHT_DRIVE] = m_package[RIGHT_DRIVE];
     }
 
+    // Set the other packets to neutral values
     m_package[RAIL]        = 0;
     m_package[DUMP]        = 0;
 
 
     if(joy->Y)
       m_package[AUGER_DRIVE] ^= BIT4;    // Toggle speed
+
 
     if(joy->SELECT)
       using_ir_sensors = !using_ir_sensors; // Toggle IR Sensors usage
@@ -180,7 +222,7 @@ void Serial::joystickCallback(const controller::JoyCon::ConstPtr& joy){
 
 
   send_package:
-    //Send package to FPGA
+    // Call the function to send a packet and let it know it is the first try with this packet
     send_package(0);
 }
 
