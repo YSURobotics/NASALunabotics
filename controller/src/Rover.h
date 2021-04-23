@@ -15,6 +15,8 @@ private:
 
     std::string timestamp = " ";
 
+    std::string locked_string = " ";
+
     std::string boost_string = " ";
 
     std::string drivetrain_string = " "; 

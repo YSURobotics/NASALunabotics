@@ -19,6 +19,8 @@ void Rover::messageCallback(const controller::Rover::ConstPtr& msg) {
 
     std::cout << timestamp << " Rover Status: \n\n";
 
+        locked_string      = ((msg->rail & BIT4) ? std::string(BOLD(UNDL(FGRN("Locked")))) + "  " + (FGRY("Unlocked\n")) : std::string(FGRY("locked  ")) + BOLD(UNDL(FGRN("Unlocked\n"))));
+
         boost_string      = ((msg->auger & BIT4) ? std::string(BOLD(UNDL(FGRN("High")))) + "  " + (FGRY("Low\n")) : std::string(FGRY("High  ")) + BOLD(UNDL(FYEL("Low\n"))));
 
         rail_right_string = ((msg->rail & BIT0) ? std::string(BOLD(UNDL(FGRN("Engaged")))) + "  " + FGRY("Disengaged\n"): std::string(FGRY("Engaged  ")) + BOLD(UNDL(FRED("Disengaged\n"))));
@@ -30,6 +32,8 @@ void Rover::messageCallback(const controller::Rover::ConstPtr& msg) {
         auger_left_string = ((msg->auger & BIT2) ? std::string(BOLD(UNDL(FGRN("Drilling")))) + "  " + FGRY("Undrilling  Stopped\n") : (msg->auger & BIT3) ? std::string(FGRY("Drilling")) + "  " + BOLD(UNDL(FYEL("Undrilling"))) + "  " + FGRY("Stopped\n") : std::string(FGRY("Drilling  ")) + FGRY("Undrilling  ") + FRED("Stopped\n"));
 
         dump_string = ((msg->dump & BIT1) ? std::string(BOLD(UNDL(FGRN("Dumping")))) + "  " + FGRY("Lowering  Stopped\n"): (msg->dump & BIT0) ? std::string(FGRY("Dumping  ")) + BOLD(UNDL(FYEL("Lowering"))) + "  " + FGRY("Stopped\n") : std::string(FGRY("Dumping  ")) + FGRY("Lowering  ") + FRED("Stopped\n"));
+
+        std::cout << "\tRail Locked" << locked_string;
 
         std::cout << "\tBoost: " << boost_string;
 
