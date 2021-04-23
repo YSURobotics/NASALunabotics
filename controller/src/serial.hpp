@@ -82,7 +82,7 @@ class Serial{
     int m_serial_port;
     struct termios m_tty;
 
-    bool servo_locked = false;
+    bool rail_locked = false;
     bool using_ir_sensors = false;
     bool boosted = false;
 };
