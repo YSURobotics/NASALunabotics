@@ -143,11 +143,11 @@ void Serial::irCallback(const controller::IR_Data::ConstPtr& msg){
 void Serial::joystickCallback(const controller::JoyCon::ConstPtr& joy){
 
     // If we are not using the IR sensors get the joystick data for throttle
-    if(!using_ir_sensors && servo_locked){
+    if(!using_ir_sensors && rail_locked){
       m_package[LEFT_DRIVE]  = (joy->LS_UD / (joycon::AXIS_RANGE / 10)) + 11;
       m_package[RIGHT_DRIVE] = (joy->RS_UD / (joycon::AXIS_RANGE / 10)) + 11;
     }
-    else if(using_ir_sensors && servo_locked){
+    else if(using_ir_sensors && rail_locked){
       // Leave the packet unchanged
       m_package[LEFT_DRIVE] =  m_package[LEFT_DRIVE];
       m_package[RIGHT_DRIVE] = m_package[RIGHT_DRIVE];
