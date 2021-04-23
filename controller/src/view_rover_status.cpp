@@ -1,4 +1,5 @@
 #include "serial.hpp"
+#include "Rover.h"
 #include "colors.hpp"
 
 
@@ -68,8 +69,9 @@ void Rover::messageCallback(const controller::Rover::ConstPtr& msg) {
 int main(int argc, char** argv)
 {
 
-  Rover rov = {};
   ros::init(argc, argv, "rover_stream");
+
+  Rover rov = {};
 
   ros::spin();
 }
