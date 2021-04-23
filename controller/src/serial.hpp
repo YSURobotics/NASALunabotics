@@ -84,5 +84,6 @@ class Serial{
 
     bool servo_locked = false;
     bool using_ir_sensors = false;
+    bool boosted = false;
 };
 

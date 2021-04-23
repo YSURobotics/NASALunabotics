@@ -162,7 +162,7 @@ void Serial::joystickCallback(const controller::JoyCon::ConstPtr& joy){
 
 
     if(joy->Y)
-      m_package[AUGER_DRIVE] ^= BIT4;    // Toggle speed
+      boosted = !boosted;    // Toggle speed
 
 
     if(joy->SELECT)
@@ -216,6 +216,9 @@ void Serial::joystickCallback(const controller::JoyCon::ConstPtr& joy){
        joy->LB == 0 && joy->RB == 0)
       {
         m_package[AUGER_DRIVE] = 0;
+        if(boosted){
+          m_package[AUGER_DRIVE] |= BIT4;
+        }
         goto send_package;
       }
 
