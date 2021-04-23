@@ -215,16 +215,17 @@ void Serial::joystickCallback(const controller::JoyCon::ConstPtr& joy){
     if(joy->LT < 0 && joy->RT < 0  &&
        joy->LB == 0 && joy->RB == 0)
       {
+        m_package[AUGER_DRIVE] = 0;
         goto send_package;
       }
 
-    if(joy->RT > 0 && joy->RB) {} // If both on, do nothing
+    if(joy->RT > 0 && joy->RB) {m_package[AUGER_DRIVE] = 0;} // If both on, do nothing
     else if(joy->RT > 0)          // RIGHT DRIVE
       m_package[AUGER_DRIVE] |= BIT0;
     else if(joy->RB)    // RIGHT BACK
       m_package[AUGER_DRIVE] |= BIT1;
 
-    if(joy->LT > 0 && joy->LB) {} // If both on, do nothing
+    if(joy->LT > 0 && joy->LB) {m_package[AUGER_DRIVE] = 0;} // If both on, do nothing
     else if(joy->LT > 0)           // LEFT DRIVE
       m_package[AUGER_DRIVE] |= BIT2;
     else if(joy->LB)     // LEFT BACK
