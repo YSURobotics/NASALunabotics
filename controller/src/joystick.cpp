@@ -5,7 +5,7 @@ joycon::JoyCon::JoyCon(const char* path){
     m_js_fd = open(path, O_RDWR);
 
     m_joy_pub_ = nh_.advertise<controller::JoyCon>("joycon", 1);
-    }
+}
 
 void joycon::JoyCon::tryReconnect(const char* path){
      m_js_fd = open(path, O_RDWR);

@@ -79,7 +79,11 @@ Serial::Serial(char* path){
 }
 
 /*
- * A function to handle the data from the IR sensors
+ * This is a callback function that is called when the "ir_array" topic is updated
+ *
+ *  @msg: address to the IR_Data msg
+ *
+ *  This has had no testing
  */
 void Serial::irCallback(const controller::IR_Data::ConstPtr& msg){
   //If the flag to use the sensors is not set, skip this
@@ -135,7 +139,7 @@ void Serial::irCallback(const controller::IR_Data::ConstPtr& msg){
 /*
  * This is a callback function that is called when the "joycon" topic is updated
  *
- *  @param: address to the joycon msg
+ *  @msg: address to the joycon msg
  *
  * This function is heavy with goto statements, very simple but rarely used in a high level language, you will need to
  * understand these
@@ -152,6 +156,7 @@ void Serial::joystickCallback(const controller::JoyCon::ConstPtr& joy){
       m_package[LEFT_DRIVE] =  m_package[LEFT_DRIVE];
       m_package[RIGHT_DRIVE] = m_package[RIGHT_DRIVE];
     } else{
+      //If the rail is unlocked, do not send movement
       m_package[LEFT_DRIVE] = 0;
       m_package[RIGHT_DRIVE] = 0;
     }
@@ -173,31 +178,33 @@ void Serial::joystickCallback(const controller::JoyCon::ConstPtr& joy){
   dump: 
     if((joy->X == 0 && joy->B == 0) ||
        (joy->X != 0 && joy->B != 0)) {
+      //if no commands, or conflicting commands, go to next part
       goto rail;
     }
 
-    if(joy->X){      // Lower Dump
+    if(joy->X){      // UnDump
       m_package[DUMP] |= BIT0;
     }
-    else if(joy->B){ // Tilt dump
+    else if(joy->B){ // Dump
       m_package[DUMP] |= BIT1;
     }
     
 
   rail:
-    if(joy->RS){
+    if(joy->RS){ //Lock the rail
       rail_locked = true; 
     }
-    else if(joy->LS){
+    else if(joy->LS){ // Unlock the rail
       rail_locked = false;
     }
 
-    if(rail_locked){
+    if(rail_locked){  //If the rail should be locked, set the flag
       m_package[RAIL] |= BIT4;
     }
 
     if((joy->DPAD_UD == 0 && joy->DPAD_LR == 0) ||
        (joy->DPAD_UD != 0 && joy->DPAD_LR != 0)){
+      //if no commands, or conflicting commands, go to next part
       goto auger_drive;
     }
 
@@ -214,13 +221,14 @@ void Serial::joystickCallback(const controller::JoyCon::ConstPtr& joy){
 
   auger_drive:
 
-    if(boosted){
+    if(boosted){  // Set the boost flag
       m_package[AUGER_DRIVE] |= BIT4;
     }
 
     if(joy->LT < 0 && joy->RT < 0  &&
        joy->LB == 0 && joy->RB == 0)
       {
+        //If no commands, move on
         goto send_package;
       }
 
@@ -242,6 +250,12 @@ void Serial::joystickCallback(const controller::JoyCon::ConstPtr& joy){
     send_package(0);
 }
 
+
+/*
+ * This handles writing to the USB buffer
+ *
+ * @count: this is how many times this same message has been sent
+ */
 void Serial::send_package(int count) {
 
   //Get a random verification byte
@@ -255,6 +269,11 @@ void Serial::send_package(int count) {
     send_package(count);
 }
 
+/*
+ * This ensures the data made it there and we have a response
+ *
+ * @sent: address of the count variable from send_package
+ */
 int Serial::wait_for_reply(int& sent){
   //temp buf
   uint8_t recv[8];
@@ -277,6 +296,7 @@ int Serial::wait_for_reply(int& sent){
     return 1;
   }
 
+  // Publish to the rover topic
   publish_rover_package(recv);
 
 }
